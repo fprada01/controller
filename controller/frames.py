@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import ttk
 
 class MenuFrame(tk.Frame):
     def __init__(self, parent, controller):
@@ -9,17 +10,12 @@ class MenuFrame(tk.Frame):
         label = tk.Label(self, text="Menu Inicial", font=("Arial", 20))
         label.pack(pady=20)
 
-        # Botão Start
-        button_arduino = tk.Button(self, text="Controle de Módulos Arduino", command=lambda: controller.show_frame(ModulesFrame))
-        button_arduino.pack(pady=10)
+        create_button(self, "Controle de Módulos Arduino", lambda: controller.show_frame(ModulesFrame))
 
-        # Botão Desligar
-        button_quit = tk.Button(self, text="Desligar", command=self.controller.turn_off_interface)
-        button_quit.pack(pady=10)
+        create_button(self, "Desligar", self.controller.turn_off_interface)
 
-        self.text_box = tk.Text(self, height=10, width=40)
+        self.text_box =  tk.Text(self, height=10, width=40)
         self.text_box.pack(pady=20)
-        #self.box_connection = controller.old_connections["ArduinoController"]
         
     def update_box_text(self, dict):
         self.text_box.delete("1.0", tk.END)
@@ -27,9 +23,7 @@ class MenuFrame(tk.Frame):
         for key, text in dict.items():
             self.text_box.insert(tk.END, f'{key}: {text}\n')
 
-        #self.after(2000, self.update_dynamic_text)
-
-
+    
 class ModulesFrame(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -38,10 +32,26 @@ class ModulesFrame(tk.Frame):
         label = tk.Label(self, text="Você está na Janela 2", font=("Arial", 20))
         label.pack(pady=20)
 
-        # Botão para voltar ao Menu
-        button_back = tk.Button(self, text="Voltar para Janela 1", command=lambda: controller.show_frame(MenuFrame))
-        button_back.pack(pady=10)
+        modules = ['Motor DC', "motor de passo"]
+        for module in modules:
+            create_modules_div(self)
+
+        create_button(self, "Menu", lambda: controller.show_frame(MenuFrame))
 
 
 
+def create_button(parent, text_button, function=None):
+        button = tk.Button(parent, text=text_button, command=function)
+        button.pack(pady=10)
 
+def create_text(parent):
+    message = tk.Message(parent, text="Este é um exemplo de texto que pode ser maior", width=80)
+    message.pack()
+
+def create_modules_div(parent):
+    div = tk.Frame(parent, width=100, height=200, borderwidth=5, relief="flat", bg="lightblue")
+    div.pack_propagate(False)  # Impede que o Frame se ajuste ao conteúdo
+    div.pack(side='left', padx=10, pady=10)
+
+    create_text(div)
+    create_button(div, 'Config')

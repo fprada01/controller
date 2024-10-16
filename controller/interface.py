@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 import tkinter as tk
-from tkinter import messagebox
+
 from .frames import (MenuFrame, ModulesFrame)
 import yaml
 import os
@@ -108,7 +108,9 @@ def main(args=None):
     try:
         node.root.mainloop()  # Inicia o loop Tkinter
     except KeyboardInterrupt:
-        return 0
+        node.root.quit()
+        node.destroy_node() 
+        rclpy.shutdown()
     finally:
         node.destroy_node() 
         rclpy.shutdown()
