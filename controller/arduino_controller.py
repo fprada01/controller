@@ -1,13 +1,24 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
+from interfaces.srv import ModulesService
 
 class ArduinoController(Node):
     def __init__(self):
         super().__init__('arduino_controller_node')
 
-        self.publisher_connection = self.create_publisher(String, 'connection', 10) # 10 é o limite de mensagens na fila
-        self.timer = self.create_timer(1, self.ConnectionMessage) # 1 é o tempo em segundos do timer
+        self.modules_list = ['motor dc', 'ligado']
+
+        self.publisher_connection = self.create_publisher(String, 'connection', 10)
+        self.timer = self.create_timer(3, self.ConnectionMessage) 
+
+        self.srv = self.create_service(ModulesService, 'modules_list_service', self.response_modules_list)
+
+    def response_modules_list(self, request, response):
+        self.get_logger().info(f"Received string: {request.input_string}")
+        response.output_list = self.modules_list
+        
+        return response
 
     def ConnectionMessage(self):
         msg = String()
@@ -15,7 +26,6 @@ class ArduinoController(Node):
         self.publisher_connection.publish(msg)
         
         self.get_logger().info('Publishing: "%s"' % msg.data)
-
 
 
 def main(args=None):

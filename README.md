@@ -19,7 +19,7 @@ set ROS_DOMAIN_ID=*n*
 3. Configurar para operar somente no localhost
 set ROS_LOCALHOST_ONLY=1
 
-4. Navegue até o 
+4. Navegue até o workspace
 C:\Users\felipe.prada\Desktop\Felipe_Prada\SM3 - Stereo Ativo\workspace
 
 4. Chamar o ROS 2 do workspace do pacote

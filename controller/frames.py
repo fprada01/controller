@@ -7,8 +7,7 @@ class MenuFrame(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
         
-        label = tk.Label(self, text="Menu Inicial", font=("Arial", 20))
-        label.pack(pady=20)
+        create_label(self, "Menu Inicial")
 
         create_button(self, "Controle de Módulos Arduino", lambda: controller.show_frame(ModulesFrame))
 
@@ -29,8 +28,7 @@ class ModulesFrame(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        label = tk.Label(self, text="Você está na Janela 2", font=("Arial", 20))
-        label.pack(pady=20)
+        create_label(self, "Controle de Módulos Arduino")
 
         modules = ['Motor DC', "motor de passo"]
         for module in modules:
@@ -38,11 +36,19 @@ class ModulesFrame(tk.Frame):
 
         create_button(self, "Menu", lambda: controller.show_frame(MenuFrame))
 
+class SetModule(tk.Frame):
+    def _init_(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
 
 
 def create_button(parent, text_button, function=None):
         button = tk.Button(parent, text=text_button, command=function)
         button.pack(pady=10)
+
+def create_label(parent, text_label):
+    label = tk.Label(parent, text=text_label, font=("Arial", 20))
+    label.pack(pady=20)
 
 def create_text(parent):
     message = tk.Message(parent, text="Este é um exemplo de texto que pode ser maior", width=80)

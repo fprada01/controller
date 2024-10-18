@@ -2,12 +2,12 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 import tkinter as tk
-
 from .frames import (MenuFrame, ModulesFrame)
 import yaml
 import os
 from ament_index_python.packages import get_package_share_directory
 import time
+from interfaces.srv import ModulesService
 
 class Interface(Node):
     def __init__(self):
@@ -25,7 +25,18 @@ class Interface(Node):
 
         self.show_frame(MenuFrame)
 
+        self.client = self.create_client(ModulesService, 'modules_list_service')
+        self.root.after(1000, self.connect_service)
+
         self.root.after(100, self.ros_spin)
+
+    def connect_service(self):
+        if self.client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('Service is now available!')
+        else:
+            self.get_logger().info('Waiting for service to become available...')
+            self.root.after(1000, self.connect_service)
+
     
     def set_window_and_frames(self):
         # Criação a janela principal
@@ -45,12 +56,14 @@ class Interface(Node):
             frame.grid(row=0, column=0, sticky="nsew")
     
     def ros_spin(self):
-        '''Executa o ROS 2 spin'''
         rclpy.spin_once(self, timeout_sec=0.1)
         self.root.after(100, self.ros_spin)  # Reagendar o método para rodar continuamente
 
     def show_frame(self, frame_class):
-        '''Exibe o frame passado como argumento'''
+        if frame_class == ModulesFrame:
+            modules_list = self.send_request_modules_service()
+            self.get_logger().info(f'{modules_list}')
+
         frame = self.frames[frame_class]
         frame.tkraise()
 
@@ -98,6 +111,25 @@ class Interface(Node):
             self.get_logger().info(f"Connections saved to {config_file_path}")
         except Exception as e:
             self.get_logger().error(f"Failed to save connections file: {e}")
+
+    def send_request_modules_service(self):
+        # Cria a solicitação com uma string
+        request = ModulesService.Request()
+        request.input_string = "Interface precisa da lista de módulos"
+        
+        # Envia a solicitação e espera a resposta
+        future = self.client.call_async(request)
+
+        rclpy.spin_until_future_complete(self, future)
+
+        if future.result() is not None:
+            response = future.result()
+            response_list = response.output_list
+            self.get_logger().info(f"Received list: {response_list}")
+            return response_list
+        else:
+            self.get_logger().error(f"Service call failed: {future.exception()}")
+
 
 
 
