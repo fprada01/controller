@@ -38,3 +38,22 @@ ros2 run controller arduino_controller
 
 Exemplo:
 call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
+
+
+
+# Erros de Compilação do ROS2
+Alguns erros podem acontecer durante a instalação do ROS2
+
+1. 1 package failed: mimick_vendor
+
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" `
+-Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+
+Explicação: https://github.com/ros2/ros2/issues/1368#issuecomment-1731286686
+
+2. 1 package failed: rosidl_generator_c 
+AttributeError: module 'em' has no attribute 'BUFFERED_OPT'
+
+pip install --upgrade empy
+pip install empy==3.3.4
+
