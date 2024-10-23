@@ -1,0 +1,6 @@
+old_connections:
+  OtherPackage: "Offline"
+
+modules_list:
+    - - motor nda
+      - ligado

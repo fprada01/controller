@@ -8,6 +8,8 @@ import os
 from ament_index_python.packages import get_package_share_directory
 import time
 from interfaces.srv import ModulesService
+from interfaces.msg import StringList
+import json
 
 class Interface(Node):
     def __init__(self):
@@ -16,6 +18,8 @@ class Interface(Node):
 
         self.start_time = time.time()
         self.get_logger().info(f'{self.start_time}')
+
+        self.load_yaml_files()
         
         self.set_window_and_frames()
 
@@ -25,10 +29,31 @@ class Interface(Node):
 
         self.show_frame(MenuFrame)
 
+        modules_list = []
+
         self.client = self.create_client(ModulesService, 'modules_list_service')
         self.root.after(1000, self.connect_service)
 
         self.root.after(100, self.ros_spin)
+
+    def load_yaml_files(self):
+        try:
+            config_file_path = os.path.join(get_package_share_directory('controller'), 'config', 'databank.yaml')
+
+            with open(config_file_path, 'r') as file:
+                self.databank = yaml.safe_load(file)
+            
+            self.old_connections = self.databank.get('old_connections', {})
+            for other_node in self.old_connections:
+                self.old_connections[other_node] = 'Offline'
+
+            #self.other_list = config_data.get('other_list', [])
+            self.modules_list = self.databank.get('modules_list', [])
+            
+
+        except Exception as e:
+            self.get_logger().error(f"Failed to load connections file: {e}")
+            self.old_connections = {}
 
     def connect_service(self):
         if self.client.wait_for_service(timeout_sec=1.0):
@@ -37,7 +62,6 @@ class Interface(Node):
             self.get_logger().info('Waiting for service to become available...')
             self.root.after(1000, self.connect_service)
 
-    
     def set_window_and_frames(self):
         # Criação a janela principal
         self.root = tk.Tk()  
@@ -68,22 +92,12 @@ class Interface(Node):
         frame.tkraise()
 
     def turn_off_interface(self):
-        self.save_connections()
+        self.save_yaml_files()
 
         self.root.quit()
 
     def start_connections(self):
-        try:
-            config_file_path = os.path.join(get_package_share_directory('controller'), 'config', 'old_connections.yaml')
-
-            with open(config_file_path, 'r') as file:
-                self.old_connections = yaml.safe_load(file)
-            for other_node in self.old_connections:
-                self.old_connections[other_node] = 'Offline'
-
-        except Exception as e:
-            self.get_logger().error(f"Failed to load connections file: {e}")
-            self.old_connections = {}
+        
         
         self.frames[MenuFrame].update_box_text(self.old_connections)
         
@@ -101,16 +115,23 @@ class Interface(Node):
 
         self.frames[MenuFrame].update_box_text(self.old_connections)
     
-    def save_connections(self):
+    def save_yaml_files(self):
         try:
             package_share_directory = get_package_share_directory('controller')
-            config_file_path = os.path.join(package_share_directory, 'config', 'old_connections.yaml')
+            config_file_path = os.path.join(package_share_directory, 'config', 'databank.yaml')
             
+            data = {
+                'old_connections': self.old_connections,
+                'modules_list': self.modules_list
+            }
+
             with open(config_file_path, 'w') as file:
-                yaml.dump(self.old_connections, file, default_flow_style=False)
-            self.get_logger().info(f"Connections saved to {config_file_path}")
+                yaml.dump(data, file, default_flow_style=False)
+
+            self.get_logger().info(f"Banco de dados salvo em {config_file_path}")
+
         except Exception as e:
-            self.get_logger().error(f"Failed to save connections file: {e}")
+            self.get_logger().error(f"Falha em salvar banco de dados: {e}")
 
     def send_request_modules_service(self):
         # Cria a solicitação com uma string
@@ -124,9 +145,9 @@ class Interface(Node):
 
         if future.result() is not None:
             response = future.result()
-            response_list = response.output_list
-            self.get_logger().info(f"Received list: {response_list}")
-            return response_list
+            response_modules_list = json.loads(response.output_string)
+            self.get_logger().info(response.output_string)
+            return response_modules_list
         else:
             self.get_logger().error(f"Service call failed: {future.exception()}")
 
