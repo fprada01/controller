@@ -1,11 +1,11 @@
-import rclpy
-from rclpy.node import Node
-from std_msgs.msg import String
+import rclpy # type: ignore
+from rclpy.node import Node # type: ignore
+from std_msgs.msg import String # type: ignore
 import tkinter as tk
-from .frames import (MenuFrame, ModulesFrame)
+from .frames import (MenuFrame, ModulesFrame, AddModule, EditModule)
 import yaml
 import os
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_share_directory # type: ignore
 import time
 from interfaces.srv import ModulesService
 from interfaces.msg import StringList
@@ -29,9 +29,7 @@ class Interface(Node):
 
         self.show_frame(MenuFrame)
 
-        modules_list = []
-
-        self.client = self.create_client(ModulesService, 'modules_list_service')
+        self.client_modules_list = self.create_client(ModulesService, 'modules_list_service')
         self.root.after(1000, self.connect_service)
 
         self.root.after(100, self.ros_spin)
@@ -49,6 +47,8 @@ class Interface(Node):
 
             #self.other_list = config_data.get('other_list', [])
             self.modules_list = self.databank.get('modules_list', [])
+
+            self.get_logger().info(f'{self.modules_list}')
             
 
         except Exception as e:
@@ -56,7 +56,7 @@ class Interface(Node):
             self.old_connections = {}
 
     def connect_service(self):
-        if self.client.wait_for_service(timeout_sec=1.0):
+        if self.client_modules_list.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('Service is now available!')
         else:
             self.get_logger().info('Waiting for service to become available...')
@@ -74,7 +74,7 @@ class Interface(Node):
 
         # Inicializar os frames
         self.frames = {}
-        for F in (MenuFrame, ModulesFrame):
+        for F in (MenuFrame, EditModule, ModulesFrame, AddModule):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -139,15 +139,14 @@ class Interface(Node):
         request.input_string = "Interface precisa da lista de módulos"
         
         # Envia a solicitação e espera a resposta
-        future = self.client.call_async(request)
+        future = self.client_modules_list.call_async(request)
 
         rclpy.spin_until_future_complete(self, future)
 
         if future.result() is not None:
             response = future.result()
-            response_modules_list = json.loads(response.output_string)
-            self.get_logger().info(response.output_string)
-            return response_modules_list
+            self.modules_list = json.loads(response.output_string)
+            self.get_logger().info(f'{self.modules_list}')
         else:
             self.get_logger().error(f"Service call failed: {future.exception()}")
 

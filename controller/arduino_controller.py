@@ -1,6 +1,6 @@
-import rclpy
-from rclpy.node import Node
-from std_msgs.msg import String
+import rclpy # type: ignore
+from rclpy.node import Node # type: ignore
+from std_msgs.msg import String # type: ignore
 from interfaces.srv import ModulesService
 from interfaces.msg import StringList
 import json
@@ -9,12 +9,13 @@ class ArduinoController(Node):
     def __init__(self):
         super().__init__('arduino_controller_node')
 
-        self.modules_list = [['motor dc', 'ligado'], ['motor de passo', 'desligado']]
+        self.modules_list = [['Motor para Lente', 'motor dc', 'Controle Manual'], 
+                             ['Motor para Espelho ','motor de passo', 'Controle Automático', 'velocidade']]
                              
         self.publisher_connection = self.create_publisher(String, 'connection', 10)
         self.timer = self.create_timer(3, self.ConnectionMessage) 
 
-        self.srv = self.create_service(ModulesService, 'modules_list_service', self.response_modules_list)
+        self.srv_modules_list = self.create_service(ModulesService, 'modules_list_service', self.response_modules_list)
 
 
     def response_modules_list(self, request, response):

@@ -15,6 +15,8 @@ class MenuFrame(tk.Frame):
 
         self.text_box =  tk.Text(self, height=10, width=40)
         self.text_box.pack(pady=20)
+
+
         
     def update_box_text(self, dict):
         self.text_box.delete("1.0", tk.END)
@@ -22,24 +24,63 @@ class MenuFrame(tk.Frame):
         for key, text in dict.items():
             self.text_box.insert(tk.END, f'{key}: {text}\n')
 
+
     
 class ModulesFrame(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
+
         create_label(self, "Controle de Módulos Arduino")
+        
+        list = self.controller.modules_list
 
-        modules = ['Motor DC', "motor de passo"]
-        for module in modules:
-            create_modules_div(self)
+        for module in list:
+            self.create_modules_div(module)
 
-        create_button(self, "Menu", lambda: controller.show_frame(MenuFrame))
+        create_button(self, "Menu", lambda: self.controller.show_frame(MenuFrame))
 
-class SetModule(tk.Frame):
-    def _init_(self, parent, controller):
+    def create_modules_div(self, module):   
+
+        div = tk.Frame(self, width=200, height=300, borderwidth=5, relief="flat", bg="lightblue")
+        div.pack_propagate(False)  # Impede que o Frame (div) se ajuste ao conteúdo
+        div.pack(side='left', padx=10, pady=10)
+
+        label = tk.Label(div, text=module[0])
+        label.pack()
+
+        message = tk.Message(div, text=f'Tipo: {module[1]}', width=80)
+        message.pack()
+
+        message = tk.Message(div, text=f'Status: {module[2]}', width=80)
+        message.pack()
+
+        text = '\n'.join(module[3:])
+        message = tk.Message(div, text=text, width=80)
+        message.pack()
+
+        create_button(div, 'Config', lambda: self.controller.show_frame(EditModule))
+
+
+class AddModule(tk.Frame):
+    def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
+
+
+class EditModule(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+
+
+
+
+    def show_module(module):
+        print('dfd')     
+
+
 
 
 def create_button(parent, text_button, function=None):
@@ -50,14 +91,4 @@ def create_label(parent, text_label):
     label = tk.Label(parent, text=text_label, font=("Arial", 20))
     label.pack(pady=20)
 
-def create_text(parent):
-    message = tk.Message(parent, text="Este é um exemplo de texto que pode ser maior", width=80)
-    message.pack()
 
-def create_modules_div(parent):
-    div = tk.Frame(parent, width=100, height=200, borderwidth=5, relief="flat", bg="lightblue")
-    div.pack_propagate(False)  # Impede que o Frame se ajuste ao conteúdo
-    div.pack(side='left', padx=10, pady=10)
-
-    create_text(div)
-    create_button(div, 'Config')
