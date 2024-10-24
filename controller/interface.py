@@ -29,7 +29,6 @@ class Interface(Node):
         self.show_frame(MenuFrame)
 
         self.client_modules_list = self.create_client(ModulesService, 'modules_list_service')
-        self.root.after(1000, self.connect_service)
 
         self.root.after(100, self.ros_spin)
 
@@ -55,13 +54,6 @@ class Interface(Node):
             self.get_logger().error(f"Failed to load yaml file: {e}")
             self.old_connections = {}
 
-    def connect_service(self):
-        if self.client_modules_list.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info('Service is now available!')
-        else:
-            self.get_logger().info('Waiting for service to become available...')
-            self.root.after(1000, self.connect_service)
-
     def set_window_and_frames(self):
         # Criação a janela principal
         self.root = tk.Tk()  
@@ -85,20 +77,24 @@ class Interface(Node):
         rclpy.spin_once(self, timeout_sec=0.1)
         self.root.after(100, self.ros_spin)  # Reagendar o método para rodar continuamente
 
-    def show_frame(self, frame_class):
+    def show_frame(self, frame_class, module=None, destroy=False):
         if frame_class == ModulesFrame:
-            if self.client_modules_list.wait_for_service(timeout_sec=1.0):
-                self.get_logger().info('Ready to change to Modules Frame')
+            if self.client_modules_list.wait_for_service(timeout_sec=0.1):
                 self.send_request_modules_service()
                 self.frames[ModulesFrame].show_and_update_modules_divs()
                 self.get_logger().info(f'{self.modules_list}')
+
             else:
-                self.get_logger().info('Arduino Controller inst available')
                 frame_class = ErroModulesFrame
+
+        if frame_class == EditModule:
+            self.frames[EditModule].update_module(module)
+
+        if destroy == True:
+            print('')
         
         frame = self.frames[frame_class]
         frame.tkraise()
-
 
     def turn_off_interface(self):
         self.save_yaml_files()

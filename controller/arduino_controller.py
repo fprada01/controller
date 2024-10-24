@@ -9,8 +9,8 @@ class ArduinoController(Node):
     def __init__(self):
         super().__init__('arduino_controller_node')
 
-        self.modules_list = [['Motor para Lente', 'motor dc', 'Controle Manual'], 
-                             ['Motor para Espelho ','motor de passo', 'Controle Automático', 'velocidade']]
+        self.modules_list = [['Motor para Lente', 'motor dc', 'Ligado', 'Controle: Manual'], 
+                             ['Motor para Espelho ','motor de passo', 'Desligado','Controle: Automático', 'velocidade']]
                              
         self.publisher_connection = self.create_publisher(String, 'connection', 10)
         self.timer = self.create_timer(3, self.ConnectionMessage) 

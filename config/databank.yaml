@@ -3,5 +3,5 @@ old_connections:
 
 modules_list:
     - - motor nda
-      - ligado
       - motor
+      - Ligado
