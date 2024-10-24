@@ -2,7 +2,7 @@ import rclpy # type: ignore
 from rclpy.node import Node # type: ignore
 from std_msgs.msg import String # type: ignore
 import tkinter as tk
-from .frames import (MenuFrame, ModulesFrame, AddModule, EditModule)
+from .frames import (MenuFrame, ModulesFrame, AddModule, EditModule, ErroModulesFrame)
 import yaml
 import os
 from ament_index_python.packages import get_package_share_directory # type: ignore
@@ -23,7 +23,6 @@ class Interface(Node):
         
         self.set_window_and_frames()
 
-        self.start_connections()
         self.subscription_connection = self.create_subscription(String, 'connection', self.connection_received, 10)
         self.subscription_connection
 
@@ -45,14 +44,15 @@ class Interface(Node):
             for other_node in self.old_connections:
                 self.old_connections[other_node] = 'Offline'
 
-            #self.other_list = config_data.get('other_list', [])
             self.modules_list = self.databank.get('modules_list', [])
+            for module in self.modules_list:
+                module[1] = 'Desligado'
 
+            self.get_logger().info(f'{self.old_connections}')
             self.get_logger().info(f'{self.modules_list}')
             
-
         except Exception as e:
-            self.get_logger().error(f"Failed to load connections file: {e}")
+            self.get_logger().error(f"Failed to load yaml file: {e}")
             self.old_connections = {}
 
     def connect_service(self):
@@ -74,10 +74,12 @@ class Interface(Node):
 
         # Inicializar os frames
         self.frames = {}
-        for F in (MenuFrame, EditModule, ModulesFrame, AddModule):
+        for F in (MenuFrame, EditModule, ModulesFrame, AddModule, ErroModulesFrame):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
+
+        self.frames[MenuFrame].update_box_text(self.old_connections)
     
     def ros_spin(self):
         rclpy.spin_once(self, timeout_sec=0.1)
@@ -85,21 +87,23 @@ class Interface(Node):
 
     def show_frame(self, frame_class):
         if frame_class == ModulesFrame:
-            modules_list = self.send_request_modules_service()
-            self.get_logger().info(f'{modules_list}')
-
+            if self.client_modules_list.wait_for_service(timeout_sec=1.0):
+                self.get_logger().info('Ready to change to Modules Frame')
+                self.send_request_modules_service()
+                self.frames[ModulesFrame].show_and_update_modules_divs()
+                self.get_logger().info(f'{self.modules_list}')
+            else:
+                self.get_logger().info('Arduino Controller inst available')
+                frame_class = ErroModulesFrame
+        
         frame = self.frames[frame_class]
         frame.tkraise()
+
 
     def turn_off_interface(self):
         self.save_yaml_files()
 
         self.root.quit()
-
-    def start_connections(self):
-        
-        
-        self.frames[MenuFrame].update_box_text(self.old_connections)
         
     def connection_received(self, msg):
         already_registered = False

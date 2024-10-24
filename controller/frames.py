@@ -31,18 +31,23 @@ class ModulesFrame(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
+        self.divs_created = []
 
         create_label(self, "Controle de Módulos Arduino")
-        
-        list = self.controller.modules_list
-
-        for module in list:
-            self.create_modules_div(module)
-
         create_button(self, "Menu", lambda: self.controller.show_frame(MenuFrame))
 
-    def create_modules_div(self, module):   
+        self.show_and_update_modules_divs()
 
+    def show_and_update_modules_divs(self):
+        for div in self.divs_created:
+            div.destroy()
+        self.divs_created.clear()
+
+        for module in self.controller.modules_list:
+            self.divs_created.append(self.create_modules_div(module))
+
+
+    def create_modules_div(self, module):   
         div = tk.Frame(self, width=200, height=300, borderwidth=5, relief="flat", bg="lightblue")
         div.pack_propagate(False)  # Impede que o Frame (div) se ajuste ao conteúdo
         div.pack(side='left', padx=10, pady=10)
@@ -62,6 +67,17 @@ class ModulesFrame(tk.Frame):
 
         create_button(div, 'Config', lambda: self.controller.show_frame(EditModule))
 
+        return div
+
+class ErroModulesFrame(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+
+        create_label(self, "Erro ao Carregar Página")
+        create_label(self, "Nó Arduino Controller não está disponível")
+
+        create_button(self, "Menu", lambda: self.controller.show_frame(MenuFrame))
 
 class AddModule(tk.Frame):
     def __init__(self, parent, controller):
