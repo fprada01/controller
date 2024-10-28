@@ -8,16 +8,19 @@ import json
 class ArduinoController(Node):
     def __init__(self):
         super().__init__('arduino_controller_node')
+        self.get_logger().info("Arduino Controller Online")
 
         self.modules_list = [['Motor para Lente', 'Motor DC', 'Ligado', 'Controle: Manual', 'Velocidade: 60'], 
-                             ['Motor para Espelho ','Motor de Passo', 'Desligado','Controle: Automático', 'velocidade']]
+                             ['Motor para Espelho ','Motor de Passo', 'Desligado','Controle: Automatico', 'Velocidade: 20', 'Posicao: 15']]
                              
-        self.publisher_connection = self.create_publisher(String, 'connection', 10)
-        self.timer = self.create_timer(3, self.ConnectionMessage) 
-
         self.srv_modules_list = self.create_service(ModulesService, 'modules_list_service', self.response_modules_list)
-        self.srv_module_edited = self.create_service(ModulesService, 'module_edited', self.response_module_edited_srv)
+        self.srv_module_edited = self.create_service(ModulesService, 'module_edited', self.response_modules_list_edited_srv)
 
+        self.sub_module_parameters = self.create_subscription(String, 'module_parameters', self.sub_changed_parameters, 10)
+        self.sub_module_parameters
+
+    def sub_changed_parameters(self, msg):
+        self.get_logger().info(f'Recebido: {msg}')
 
     def response_modules_list(self, request, response):
         self.get_logger().info(f"Pedido recebido: {request.input_string}")
@@ -25,20 +28,12 @@ class ArduinoController(Node):
         
         return response
 
-    def response_module_edited_srv(self, request, response):
-        self.get_logger().info(f"Modulo editado recebido: {request.input_string}")
+    def response_modules_list_edited_srv(self, request, response):
         self.modules_list = json.loads(request.input_string)
-        self.get_logger().info(f'{self.modules_list}')
         response.output_string = 'Modulo editado recebido'
 
+        self.get_logger().info(f'{self.modules_list}')
         return response
-
-    def ConnectionMessage(self):
-        msg = String()
-        msg.data = 'ArduinoController Online'
-        self.publisher_connection.publish(msg)
-        
-        self.get_logger().info('Publishing: "%s"' % msg.data)
 
 
 def main(args=None):

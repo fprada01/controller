@@ -1,5 +1,6 @@
 old_connections:
   OtherPackage: "Offline"
+  ArduinoController: "Offline"
 
 modules_list:
     - - motor nda
