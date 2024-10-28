@@ -9,19 +9,28 @@ class ArduinoController(Node):
     def __init__(self):
         super().__init__('arduino_controller_node')
 
-        self.modules_list = [['Motor para Lente', 'motor dc', 'Ligado', 'Controle: Manual'], 
-                             ['Motor para Espelho ','motor de passo', 'Desligado','Controle: Automático', 'velocidade']]
+        self.modules_list = [['Motor para Lente', 'Motor DC', 'Ligado', 'Controle: Manual', 'Velocidade: 60'], 
+                             ['Motor para Espelho ','Motor de Passo', 'Desligado','Controle: Automático', 'velocidade']]
                              
         self.publisher_connection = self.create_publisher(String, 'connection', 10)
         self.timer = self.create_timer(3, self.ConnectionMessage) 
 
         self.srv_modules_list = self.create_service(ModulesService, 'modules_list_service', self.response_modules_list)
+        self.srv_module_edited = self.create_service(ModulesService, 'module_edited', self.response_module_edited_srv)
 
 
     def response_modules_list(self, request, response):
-        self.get_logger().info(f"Received string: {request.input_string}")
+        self.get_logger().info(f"Pedido recebido: {request.input_string}")
         response.output_string = json.dumps(self.modules_list)
         
+        return response
+
+    def response_module_edited_srv(self, request, response):
+        self.get_logger().info(f"Modulo editado recebido: {request.input_string}")
+        self.modules_list = json.loads(request.input_string)
+        self.get_logger().info(f'{self.modules_list}')
+        response.output_string = 'Modulo editado recebido'
+
         return response
 
     def ConnectionMessage(self):

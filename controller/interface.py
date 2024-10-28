@@ -30,6 +30,8 @@ class Interface(Node):
 
         self.client_modules_list = self.create_client(ModulesService, 'modules_list_service')
 
+        self.client_module_edited = self.create_client(ModulesService, 'module_edited')
+
         self.root.after(100, self.ros_spin)
 
     def load_yaml_files(self):
@@ -88,7 +90,7 @@ class Interface(Node):
                 frame_class = ErroModulesFrame
 
         if frame_class == EditModule:
-            self.frames[EditModule].update_module(module)
+            self.frames[EditModule].update_frame_editmodule(module)
 
         if destroy == True:
             print('')
@@ -150,7 +152,19 @@ class Interface(Node):
         else:
             self.get_logger().error(f"Service call failed: {future.exception()}")
 
+    def send_edited_module(self):
+        request = ModulesService.Request()
+        request.input_string = json.dumps(self.modules_list)
 
+        future = self.client_module_edited.call_async(request)
+
+        rclpy.spin_until_future_complete(self, future)
+
+        if future.result() is not None:
+            self.get_logger().info(f'{future.result()}')
+        else:
+            self.get_logger().error(f"Service call failed: {future.exception()}")
+            self.timer = self.create_timer(1, self.send_edited_module())
 
 
 def main(args=None):

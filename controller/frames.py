@@ -22,8 +22,6 @@ class MenuFrame(tk.Frame):
 
         for key, text in dict.items():
             self.text_box.insert(tk.END, f'{key}: {text}\n')
-
-
     
 class ModulesFrame(tk.Frame):
     def __init__(self, parent, controller):
@@ -92,7 +90,6 @@ class EditModule(tk.Frame):
 
         self.message_name = tk.Message(self, text='Nome: ', width=80)
         self.message_name.pack()
-
         self.entry_name = tk.Entry(self)
         self.entry_name.pack()
 
@@ -104,7 +101,8 @@ class EditModule(tk.Frame):
         self.button_control = tk.Button(self, text=None, command=self.click_button_control)
         self.button_control.pack_forget()
 
-    def update_module(self, module):
+
+    def update_frame_editmodule(self, module):
         self.old_module_name = module[0]
         self.change_module = module.copy()
 
@@ -114,11 +112,12 @@ class EditModule(tk.Frame):
         self.message_type.config(text=f'Tipo: {self.change_module[1]}')
 
         self.button_turn_on.config(text=self.change_module[2])
-
-        if self.change_module[3].startswith('Controle'):
+        self.change_button_control(False)
+        
+        if self.change_module[1] == 'Motor de Passo':
             self.change_button_control(True)
-        else:
-            self.change_button_control(False)
+
+
 
     def button_turn_on_module(self):
         def turn_on():
@@ -150,23 +149,13 @@ class EditModule(tk.Frame):
 
     def salve_edit_module(self):
         self.change_module[0] = self.entry_name.get()
-        self.controller.get_logger().info(self.change_module[0])
-
-        self.controller.get_logger().info(f' matriz completa {self.controller.modules_list}')
-
         for i, module in enumerate(self.controller.modules_list):
-            self.controller.get_logger().info(f'{i}')
-
-            self.controller.get_logger().info(f'{self.controller.modules_list[i][0]} nome module_list')
-            self.controller.get_logger().info(self.old_module_name)
 
             if self.controller.modules_list[i][0] == self.old_module_name:
-                self.controller.get_logger().info(f'{self.controller.modules_list[i]}')
-                self.controller.get_logger().info(f'{self.change_module}')
                 self.controller.modules_list[i] = self.change_module
 
-                self.controller.get_logger().info(f'{self.controller.modules_list[i]}')
-                self.update_module(self.controller.modules_list[i])
+                self.update_frame_editmodule(self.controller.modules_list[i])
+        self.controller.send_edited_module()
         
         
 
